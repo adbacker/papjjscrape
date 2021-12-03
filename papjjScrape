@@ -1,0 +1,89 @@
+#!/bin/bash
+
+yardId=(1119 1020 1022 1021 1099)
+vehicleMake="VOLVO"
+vehicleModel=(V70 XC70 S60 S80 XC90)
+
+#   1119 == Garden City
+#   1020 == Boise
+#   1022 == Nampa
+#   1021 == Caldwell
+#   1099 == Twin Falls
+#   
+#   VehicleMake == VOLVO
+#   
+#   VehicleModel == V70, XC70, S60, S80, XC90
+
+# now=$(date +"%Y%m%d-%H.%M.%S")
+boundaryId="WebKitFormBoundary0lumbOwrLUA3RQ1v"
+
+resultFile=papInventory
+
+echo "[" > $resultFile
+
+for y in "${yardId[@]}"
+do
+	echo "{\"yard\":$y," >> $resultFile
+	# echo "\"scrape time\":\"$now\"," >> $resultFile
+	echo "\"cars\": [" >> $resultFile
+
+	for m in "${vehicleModel[@]}"
+	do
+		echo -e "------$boundaryId\\r\\nContent-Disposition: form-data; name=\"YardId\"\\r\\n\\r\\n$y\r\n------$boundaryId\\r\\nContent-Disposition: form-data; name=\"VehicleMake\"\\r\\n\\r\\n$vehicleMake\\r\\n------$boundaryId\\r\\nContent-Disposition: form-data; name=\"VehicleModel\"\\r\\n\\r\\n$m\\r\\n------$boundaryId--\\r\\n" > tmp.data
+
+		curl -s 'http://inventory.pickapartjalopyjungle.com/' \
+		-H 'Proxy-Connection: keep-alive' \
+		-H 'Cache-Control: max-age=0' \
+		-H 'Upgrade-Insecure-Requests: 1' \
+		-H 'Origin: http://inventory.pickapartjalopyjungle.com' \
+		-H "Content-Type: multipart/form-data; boundary=----$boundaryId" \
+        -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36' \
+		-H 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9' \
+		-H 'Referer: http://inventory.pickapartjalopyjungle.com/' \
+		-H 'Accept-Language: en-US,en;q=0.9' \
+		-H 'dnt: 1' \
+		-H 'sec-gpc: 1' \
+		--data-binary @tmp.data \
+ 		--compressed | grep '<td.*>' > tmpModelResultFile
+
+		results=$(cat tmpModelResultFile | wc -l | sed 's: ::g')
+		echo "found $results"
+		if [[ $results != "0" ]]
+		then	
+			cat tmpModelResultFile | sed -e 's: ::g' \
+ 				-e 's:<td>\([0-9]\{4\}\):{\"year\"\: \"\1\",:g' \
+				-e 's:<tdstyle\=\"font-weight\:700\">::g' \
+				-e 's:^<td>\([0-9]\{2,3\}\):\"row\" \:\1},:g' \
+				-e 's:VOLVO:\"make\" \:\"VOLVO\",:g' \
+				-e 's:</td>::g' \
+				-e 's:\([A-Z]\{1,2\}[0-9]\{1,2\}\):\"model\" \:\"\1\",:g' > modelYardFile	
+			cat modelYardFile >> $resultFile	
+		fi
+	done
+	# trim the last comma off the last car object in the yard array
+	sed -i '' -e '$ s:,::g' $resultFile 
+
+	echo "]" >> $resultFile
+	echo "}," >> $resultFile
+done
+
+# trim that last json-no-like comma off the last array object
+sed -i '' -e '$ s:,::g' $resultFile 
+
+
+echo "]" >> $resultFile
+
+rm tmpModelResultFile
+rm modelYardFile
+rm tmp.data
+
+cat $resultFile | sed \
+				-e 's:1119:\"Garden City\":g' \
+				-e 's:1020:\"Boise\":g' \
+				-e 's:1022:\"Nampa\":g' \
+				-e 's:1021:\"Caldwell\":g' \
+				-e 's:1099:\"Twin Falls\":g' > $resultFile.json
+cat $resultFile.json | jq .
+
+rm $resultFile
+
