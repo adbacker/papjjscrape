@@ -1,6 +1,5 @@
 [
 {"yard":"Garden City",
-"scrape time":"20211202-20.11.33",
 "cars": [
 {"year": "2000",
 "make" :"VOLVO",
@@ -25,7 +24,6 @@
 ]
 },
 {"yard":"Boise",
-"scrape time":"20211202-20.11.33",
 "cars": [
 {"year": "2000",
 "make" :"VOLVO",
@@ -54,7 +52,6 @@
 ]
 },
 {"yard":"Nampa",
-"scrape time":"20211202-20.11.33",
 "cars": [
 {"year": "1998",
 "make" :"VOLVO",
@@ -99,7 +96,6 @@
 ]
 },
 {"yard":"Caldwell",
-"scrape time":"20211202-20.11.33",
 "cars": [
 {"year": "2000",
 "make" :"VOLVO",
@@ -140,7 +136,6 @@
 ]
 },
 {"yard":"Twin Falls",
-"scrape time":"20211202-20.11.33",
 "cars": [
 ]
 }
