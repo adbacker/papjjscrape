@@ -73,9 +73,9 @@ sed -i '' -e '$ s:,::g' $resultFile
 
 echo "]" >> $resultFile
 
-#rm tmpModelResultFile
-#rm modelYardFile
-#rm tmp.data
+rm tmpModelResultFile
+rm modelYardFile
+rm tmp.data
 
 cat $resultFile | sed \
 				-e 's:1119:\"Garden City\":g' \
@@ -85,5 +85,5 @@ cat $resultFile | sed \
 				-e 's:1099:\"Twin Falls\":g' > $resultFile.json
 cat $resultFile.json | jq .
 
-#rm $resultFile
+rm $resultFile
 
